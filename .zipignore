@@ -1,0 +1,9 @@
+#This is the comment
+#{dir} ignored all directories
+#{file} ignored all files
+#{hidden} ignored all hidden files and dirs
+
+{hidden}
+.idea/
+target/
+*.iml
