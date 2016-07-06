@@ -8,7 +8,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Created by BigCheese on 12.11.15.
+ * <p>Сжимает файлы в zip архив.
+ * Для сжатия используется <tt>Deflater.BEST_COMPRESSION</tt>.</p>
+ *
+ * @see     ru.bigcheese.zipproject.FilesFilter
+ * @author  BigCheese
+ * @since   JDK1.7
  */
 public class Zipper {
 
@@ -18,13 +23,23 @@ public class Zipper {
     private int fileCounter = 0;
     private int dirCounter = 0;
 
+    /**
+     * Создает экземпляр класса <code>Zipper</code>.
+     * Формирует список файлов/каталогов, включаемых в архив.
+     *
+     * @param rootPath путь к корневому каталогу
+     * @param filter фильтр файлов/каталогов, включаемых в архив
+     */
     public Zipper(String rootPath, FileFilter filter) {
         this.rootPath = rootPath;
         generateFilesList(new File(this.rootPath), filter);
     }
 
     /**
-     * Сжать файлы в zip архив
+     * Сжимает файлы в zip архив.
+     *
+     * @param zipFile полный путь к итоговому zip-файлу
+     * @throws RuntimeException если возникла ошибка ввода/вывода при сжатии файлов
      */
     public void zip(final String zipFile) {
         byte[] buffer = new byte[BUFFER_SIZE];
@@ -55,10 +70,10 @@ public class Zipper {
     }
 
     /**
-     * Сформировать список всех файлов в каталоге (рекурсивно)
+     * Формирует список всех файлов в каталоге (рекурсивно).
      *
-     * @param file root path
-     * @param filter file accept
+     * @param file корневой каталог
+     * @param filter фильтр файлов/каталогов
      */
     private void generateFilesList(final File file, final FileFilter filter) {
         if (file.isFile() && filter.accept(file)) {
@@ -84,7 +99,7 @@ public class Zipper {
     /**
      * Получение относительного пути файла в архиве.
      *
-     * @param filename absolute pathname string
+     * @param filename Абсолютный путь к файлу
      * @return относительный путь файла в архиве
      */
     private String getRelativePath(final String filename) {

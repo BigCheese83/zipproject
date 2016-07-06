@@ -1,5 +1,8 @@
 package ru.bigcheese.zipproject;
 
+/**
+ * Application main class
+ */
 public class Main {
 
     public static void main(String[] args) {

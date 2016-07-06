@@ -6,12 +6,31 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
- * Created by BigCheese on 12.11.15.
+ * <p>Фильтр файлов и каталогов, задаваемый на основе шаблона,
+ * который считывается из специального конфигурационного файла <tt>.zipignore</tt>.
+ * Поддерживаются следующие шаблоны:
+ * <ul>
+ *  <li># - комментарий</li>
+ *  <li>{hidden} - исключаются все скрытые файлы</li>
+ *  <li>{file} - исключаются все файлы</li>
+ *  <li>{dir} - исключаются все папки</li>
+ *  <li>[папка]/ - исключается папка и все находящиеся в ней файлы/папки</li>
+ *  <li> маска * - любой символ или его отсутствие</li>
+ * </ul>
+ * <p>Если файл <tt>.zipignore</tt> не существует, фильтр будет принимать все файлы.
+ *
+ * @see     java.io.FileFilter
+ * @see     ru.bigcheese.zipproject.Zipper
+ * @author  BigCheese
+ * @since   JDK1.7
  */
 public class FilesFilter implements FileFilter {
 
     private final Set<String> filterSet = new HashSet<>();
 
+    /**
+     * Инициализирует фильтр. Шаблоны фильтра считываются из файла <tt>.zipignore</tt>.
+     */
     public FilesFilter() {
         File ignoreFile = new File(".zipignore");
         if (ignoreFile.exists()) {
@@ -19,6 +38,11 @@ public class FilesFilter implements FileFilter {
         }
     }
 
+    /**
+     * Применяет фильтр к заданному файлу.
+     * @param file файл
+     * @return <tt>true</tt>, если файл прошел фильтр
+     */
     @Override
     public boolean accept(File file) {
         if (filterSet.isEmpty()) return true;
