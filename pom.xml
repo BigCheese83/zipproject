@@ -5,7 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.bigcheese.zipproject</groupId>
     <artifactId>zipproject</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <build>
         <plugins>
@@ -14,8 +18,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
             <plugin>

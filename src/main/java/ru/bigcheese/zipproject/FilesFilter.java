@@ -1,9 +1,15 @@
 package ru.bigcheese.zipproject;
 
-import java.io.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * <p>Фильтр файлов и каталогов, задаваемый на основе шаблона,
@@ -19,21 +25,28 @@ import java.util.StringTokenizer;
  * </ul>
  * <p>Если файл <tt>.zipignore</tt> не существует, фильтр будет принимать все файлы.
  *
- * @see     java.io.FileFilter
  * @see     ru.bigcheese.zipproject.Zipper
  * @author  BigCheese
- * @since   JDK1.7
+ * @since   JDK1.8
  */
-public class FilesFilter implements FileFilter {
+public class FilesFilter {
+
+    private static final String HIDDEN_TEMPLATE = "{hidden}";
+    private static final String FILE_TEMPLATE = "{file}";
+    private static final String DIR_TEMPLATE = "{dir}";
+    private static final String SPECIAL_REGEX_CHARS =
+            "[\\\\<\\\\(\\\\[\\\\{\\\\\\\\\\\\^\\\\-\\\\=\\\\$\\\\!\\\\|\\\\]\\\\}\\\\)\\\\?\\\\+\\\\.\\\\>]";
+    private static final Pattern MASK_PATTERN = Pattern.compile(".*\\*.*");
 
     private final Set<String> filterSet = new HashSet<>();
+    private final Map<String, Pattern> maskMap = new HashMap<>();
 
     /**
      * Инициализирует фильтр. Шаблоны фильтра считываются из файла <tt>.zipignore</tt>.
      */
     public FilesFilter() {
-        File ignoreFile = new File(".zipignore");
-        if (ignoreFile.exists()) {
+        Path ignoreFile = Paths.get(".zipignore");
+        if (Files.exists(ignoreFile)) {
             readIgnoreFile(ignoreFile);
         }
     }
@@ -43,69 +56,59 @@ public class FilesFilter implements FileFilter {
      * @param file файл
      * @return <tt>true</tt>, если файл прошел фильтр
      */
-    @Override
-    public boolean accept(File file) {
-        if (filterSet.isEmpty()) return true;
-        for (String pattern : filterSet) {
-            if (match(file, pattern)) {
-                return false;
+    public boolean accept(Path file) {
+        if (!filterSet.isEmpty()) {
+            for (String pattern : filterSet) {
+                try {
+                    if (match(file, pattern)) {
+                        return false;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return true;
     }
 
-    private void readIgnoreFile(File file) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (!line.isEmpty() && !line.startsWith("#")) {
-                    filterSet.add(line);
-                }
-            }
+    private void readIgnoreFile(Path file) {
+        try {
+            Set<String> lines = Files.readAllLines(file)
+                    .stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty() && !s.startsWith("#"))
+                    .collect(Collectors.toSet());
+            filterSet.addAll(lines);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean match(File file, String string) {
-        if (string.equals("{hidden}")) {
-            return file.isHidden();
+    private boolean match(Path file, String string) throws IOException {
+        if (HIDDEN_TEMPLATE.equals(string)) {
+            return Files.isHidden(file);
         }
-        if (string.equals("{file}")) {
-            return file.isFile();
+        if (FILE_TEMPLATE.equals(string)) {
+            return Files.isRegularFile(file);
         }
-        if (string.equals("{dir}")) {
-            return file.isDirectory();
-        }
-
-        if (string.endsWith("/") && !file.isDirectory()) {
-            return false;
+        if (DIR_TEMPLATE.equals(string)) {
+            return Files.isDirectory(file);
         }
 
-        String filename = file.getName().toLowerCase();
-        String template = string.replace("/", "").toLowerCase();
+        String filename = file.toString().toLowerCase();
 
-        StringTokenizer tokenizer = new StringTokenizer(template, "*", true);
-        int i = 0;
-        while (tokenizer.hasMoreTokens()) {
-            String token = tokenizer.nextToken();
-            if ("*".equals(token)) {
-                if (tokenizer.hasMoreTokens()) {
-                    String next = tokenizer.nextToken();
-                    i = filename.indexOf(next, i);
-                    if (i == -1) {
-                        return false;
-                    }
-                    i += next.length();
-                }
-                continue;
-            }
-            if (!filename.startsWith(token, i)) {
-                return false;
-            }
-            i += token.length();
+        if (string.endsWith("/") && Files.isDirectory(file)) {
+            return filename.contains(string.substring(0, string.length() - 1));
         }
-        return true;
+
+        if (MASK_PATTERN.matcher(string).matches()) {
+            Pattern pattern = maskMap.computeIfAbsent(string, k -> {
+                String regex = ".*" + string.replaceAll(SPECIAL_REGEX_CHARS, "\\\\$0").replace("*", ".*");
+                return Pattern.compile(regex);
+            });
+            return pattern.matcher(filename).matches();
+        }
+
+        return false;
     }
 }
