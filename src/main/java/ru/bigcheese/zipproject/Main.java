@@ -1,26 +1,35 @@
 package ru.bigcheese.zipproject;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import javax.swing.*;
+import java.awt.*;
+
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 /**
  * Application main class
  */
 public class Main {
 
-    public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("Error! Need a root directory parameter. Run application again with parameter.");
-            System.exit(1);
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            applyLookAndFeel();
+            createAndShowGUI();
+        });
+    }
+
+    private static void applyLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
         }
-        String root = args[0];
-        if (!Files.exists(Paths.get(root))) {
-            System.err.println("Invalid parameter. Directory " + root + " not exists");
-            System.exit(1);
-        }
-        Zipper zipper = new Zipper(root);
-        zipper.generateFilesList(new FilesFilter());
-        zipper.zip(root + ".zip");
+    }
+
+    private static void createAndShowGUI() {
+        JFrame frame = new MainFrame();
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 }

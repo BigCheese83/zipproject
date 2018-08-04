@@ -1,25 +1,18 @@
 package ru.bigcheese.zipproject;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class ZipFilteredFileVisitor extends SimpleFileVisitor<Path> {
 
     private final String rootPath;
-    private final String separator;
     private final FilesFilter filter;
-    private final ZipInfo zipInfo;
+    private final ZipInfo zipInfo = new ZipInfo();
 
-    public ZipFilteredFileVisitor(String rootPath, String separator, FilesFilter filter, ZipInfo zipInfo) {
+    public ZipFilteredFileVisitor(String rootPath, FilesFilter filter) {
         this.rootPath = rootPath;
-        this.separator = separator;
         this.filter = filter;
-        this.zipInfo = zipInfo;
     }
 
     @Override
@@ -31,7 +24,7 @@ public class ZipFilteredFileVisitor extends SimpleFileVisitor<Path> {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
                 // Если каталог пустой, включаем в список
                 if (!stream.iterator().hasNext()) {
-                    zipInfo.getFiles().add(getRelativePath(dir.toString()) + separator);
+                    zipInfo.getFiles().add(getRelativePath(dir.toString()) + FileSystems.getDefault().getSeparator());
                 }
             }
             zipInfo.incrementDirCounter();
@@ -47,6 +40,10 @@ public class ZipFilteredFileVisitor extends SimpleFileVisitor<Path> {
             zipInfo.incrementFileCounter();
         }
         return FileVisitResult.CONTINUE;
+    }
+
+    public ZipInfo getZipInfo() {
+        return zipInfo;
     }
 
     /**

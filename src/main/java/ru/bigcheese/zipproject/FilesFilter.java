@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * </ul>
  * <p>Если файл <tt>.zipignore</tt> не существует, фильтр будет принимать все файлы.
  *
- * @see     ru.bigcheese.zipproject.Zipper
+ * @see     ru.bigcheese.zipproject.ZipFilteredFileVisitor
  * @author  BigCheese
  * @since   JDK1.8
  */
@@ -57,15 +57,13 @@ public class FilesFilter {
      * @return <tt>true</tt>, если файл прошел фильтр
      */
     public boolean accept(Path file) {
-        if (!filterSet.isEmpty()) {
-            for (String pattern : filterSet) {
-                try {
-                    if (match(file, pattern)) {
-                        return false;
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+        for (String pattern : filterSet) {
+            try {
+                if (match(file, pattern)) {
+                    return false;
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         return true;

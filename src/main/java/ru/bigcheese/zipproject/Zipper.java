@@ -3,9 +3,7 @@ package ru.bigcheese.zipproject;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -25,8 +23,7 @@ public class Zipper {
     private static final int BUFFER_SIZE = 1024;
 
     private final String rootPath;
-    private final String separator = FileSystems.getDefault().getSeparator();
-    private final ZipInfo zipInfo = new ZipInfo();
+    private ZipInfo zipInfo;
 
     /**
      * Создает экземпляр класса <code>Zipper</code>.
@@ -35,6 +32,13 @@ public class Zipper {
      */
     public Zipper(final String rootPath) {
         this.rootPath = rootPath;
+        try {
+            this.zipInfo = generateFilesList(rootPath,
+                    new ZipFilteredFileVisitor(rootPath, new FilesFilter()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.zipInfo = new ZipInfo();
+        }
     }
 
     /**
@@ -45,6 +49,7 @@ public class Zipper {
      */
     public void zip(final String zipFile) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
+        String separator = FileSystems.getDefault().getSeparator();
 
         try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile))) {
             out.setLevel(Deflater.BEST_COMPRESSION);
@@ -73,11 +78,11 @@ public class Zipper {
     /**
      * Формирует список файлов/каталогов, включаемых в архив.
      *
-     * @param filter фильтр файлов/каталогов
      * @throws IOException если возникла ошибка ввода/вывода
      */
-    public void generateFilesList(final FilesFilter filter) throws IOException {
+    private ZipInfo generateFilesList(String rootPath, ZipFilteredFileVisitor visitor) throws IOException {
         System.out.println("Generate files list ...");
-        Files.walkFileTree(Paths.get(rootPath), new ZipFilteredFileVisitor(rootPath, separator, filter, zipInfo));
+        Files.walkFileTree(Paths.get(rootPath), visitor);
+        return visitor.getZipInfo();
     }
 }
