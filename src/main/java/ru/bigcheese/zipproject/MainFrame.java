@@ -71,7 +71,7 @@ public class MainFrame extends JFrame {
     private void zipProject(String path) {
         new Thread(() -> {
             try {
-                new Zipper(path).zip(path + ".zip");
+                Zipper.create(path).zip(path + ".zip");
             } catch (IOException e) {
                 throw new RuntimeException("I/O error while zip project", e);
             }

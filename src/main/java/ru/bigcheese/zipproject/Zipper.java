@@ -22,23 +22,32 @@ public class Zipper {
 
     private static final int BUFFER_SIZE = 1024;
 
-    private final String rootPath;
+    private String rootPath;
     private ZipInfo zipInfo;
+
+    private Zipper() {
+    }
 
     /**
      * Создает экземпляр класса <code>Zipper</code>.
      *
      * @param rootPath путь к корневому каталогу
      */
-    public Zipper(final String rootPath) {
-        this.rootPath = rootPath;
+    public static Zipper create(final String rootPath) {
+        Zipper zipper = new Zipper();
+        zipper.rootPath = rootPath;
+
+        // Формирует список файлов/каталогов, включаемых в архив.
         try {
-            this.zipInfo = generateFilesList(rootPath,
-                    new ZipFilteredFileVisitor(rootPath, new FilesFilter()));
+            System.out.println("Generate files list ...");
+            ZipFilteredFileVisitor visitor = new ZipFilteredFileVisitor(rootPath, FilesFilter.create());
+            Files.walkFileTree(Paths.get(rootPath), visitor);
+            zipper.zipInfo = visitor.getZipInfo();
         } catch (Exception e) {
+            zipper.zipInfo = new ZipInfo();
             e.printStackTrace();
-            this.zipInfo = new ZipInfo();
         }
+        return zipper;
     }
 
     /**
@@ -75,14 +84,4 @@ public class Zipper {
         }
     }
 
-    /**
-     * Формирует список файлов/каталогов, включаемых в архив.
-     *
-     * @throws IOException если возникла ошибка ввода/вывода
-     */
-    private ZipInfo generateFilesList(String rootPath, ZipFilteredFileVisitor visitor) throws IOException {
-        System.out.println("Generate files list ...");
-        Files.walkFileTree(Paths.get(rootPath), visitor);
-        return visitor.getZipInfo();
-    }
 }

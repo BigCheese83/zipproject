@@ -117,8 +117,7 @@ public class MessageConsole {
          *  The message will be treated differently depending on whether the line
          *  will be appended or inserted into the Document
          */
-        public void flush()
-        {
+        public void flush() {
             String message = toString();
 
             if (message.length() == 0) {

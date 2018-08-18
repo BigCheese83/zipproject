@@ -41,14 +41,28 @@ public class FilesFilter {
     private final Set<String> filterSet = new HashSet<>();
     private final Map<String, Pattern> maskMap = new HashMap<>();
 
+    private FilesFilter() {
+    }
+
     /**
      * Инициализирует фильтр. Шаблоны фильтра считываются из файла <tt>.zipignore</tt>.
      */
-    public FilesFilter() {
+    public static FilesFilter create() {
+        FilesFilter filter = new FilesFilter();
         Path ignoreFile = Paths.get(".zipignore");
         if (Files.exists(ignoreFile)) {
-            readIgnoreFile(ignoreFile);
+            try {
+                Set<String> lines = Files.readAllLines(ignoreFile)
+                        .stream()
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty() && !s.startsWith("#"))
+                        .collect(Collectors.toSet());
+                filter.filterSet.addAll(lines);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        return filter;
     }
 
     /**
@@ -67,19 +81,6 @@ public class FilesFilter {
             }
         }
         return true;
-    }
-
-    private void readIgnoreFile(Path file) {
-        try {
-            Set<String> lines = Files.readAllLines(file)
-                    .stream()
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty() && !s.startsWith("#"))
-                    .collect(Collectors.toSet());
-            filterSet.addAll(lines);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private boolean match(Path file, String string) throws IOException {
