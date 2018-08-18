@@ -3,6 +3,7 @@ package ru.bigcheese.zipproject;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +16,10 @@ public class MainFrame extends JFrame {
 
         JLabel label = new JLabel("Select");
         JTextField textField = new JTextField(35);
+
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.add(label, BorderLayout.WEST);
+        panel.add(textField, BorderLayout.CENTER);
 
         JFileChooser fc = new JFileChooser(".");
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -44,11 +49,10 @@ public class MainFrame extends JFrame {
         mc.redirectOut();
         mc.redirectErr();
 
-        add(label);
-        add(textField);
+        add(panel, "pushx, growx");
         add(browseButton);
         add(zipButton, "wrap");
-        add(scrollPane, "span, grow");
+        add(scrollPane, "span, push, grow");
     }
 
     private void validateRootPath(String path) {
